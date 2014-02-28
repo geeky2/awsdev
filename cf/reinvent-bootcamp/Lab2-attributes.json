@@ -1,0 +1,11 @@
+{
+  "wordpress" :
+  {
+  	"dbhost" : "PUT RDS HOST HERE",
+  	"db" : {
+  		"user" : "admin",
+  		"password" : "admin",
+  		"database" : "PUT DATABASE NAME HERE"
+  	}
+  }
+}

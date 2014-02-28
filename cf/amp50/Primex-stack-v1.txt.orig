@@ -1,0 +1,92 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  
+  "Description" : "Primex Stack",
+  
+  "Parameters" : {
+      
+    "StackType" : {
+          "Description" : "Stack Type/Environment Selection: AMP-5.0.0.48-pre-installed",
+          "Default" : "AMP-5.0.0.48-pre-installed",
+          "Type" : "String",
+          "AllowedValues" : ["AMP-5.0.0.48-pre-installed"],
+          "ConstraintDescription" : "must be a valid stack type."
+    },
+    
+    "PublicKeyPair" : {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type" : "String",
+      "Default" : "sns_devops"
+    },    
+   
+    "TagInstanceName" : {
+      "Description" : "Tag for Instance Name",
+      "Type" : "String"
+    },      
+   
+   
+    "InstanceType" : {
+      "Description" : "WebServer EC2 instance type",
+      "Type" : "String",
+      "Default" : "m1.medium",
+      "AllowedValues" : [ "t1.micro","m1.small","m1.medium","m1.large","m1.xlarge","m2.xlarge","m2.2xlarge","m2.4xlarge","m3.xlarge","m3.2xlarge","c1.medium","c1.xlarge","cc1.4xlarge","cc2.8xlarge","cg1.4xlarge"],
+      "ConstraintDescription" : "must be a valid EC2 instance type."
+    }  
+  },
+  
+  "Mappings" : {
+
+    "StackEnvMapping" : {
+          "AMP-5.0.0.48-pre-installed"      : { 
+          	"VPC" : "vpc-4ac0a62b",
+          	"AMI" : "ami-a3e8efca",
+          	"SGAPP" : ["sg-ca952aa5"],      
+          	"KeyPair" : "sns_devops",
+          	"SUBNET01" : "subnet-55c0a634"
+          	}
+          }
+    },
+    
+    
+  "Resources" : {     
+    "IPAddress" : {
+      "Type" : "AWS::EC2::EIP",
+      "Properties" : {
+        "Domain" : "vpc",
+        "InstanceId" : { "Ref" : "WebServer" }
+      }
+    },
+    
+    "WebServer": {  
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap" : [ "StackEnvMapping", { "Ref" : "StackType" }, "AMI"]},
+        "InstanceType"     : { "Ref" : "InstanceType" },
+        "SecurityGroupIds" : { "Fn::FindInMap" : [ "StackEnvMapping", { "Ref" : "StackType" }, "SGAPP"]},
+        "Tags" : [{ "Key" : "Name" , "Value" : { "Ref" : "TagInstanceName" } }],
+        "KeyName" : { "Ref" : "PublicKeyPair" },
+        "SubnetId" : { "Fn::FindInMap" : [ "StackEnvMapping", { "Ref" : "StackType" }, "SUBNET01"]}
+        
+      }
+    }
+       
+
+          
+  },
+  
+  "Outputs" : {
+      "InstanceId" : {
+        "Description" : "InstanceId of the newly created EC2 instance",
+        "Value" : { "Ref" : "WebServer" }
+      },
+      "AZ" : {
+        "Description" : "Availability Zone of the newly created EC2 instance",
+        "Value" : { "Fn::GetAtt" : [ "WebServer", "AvailabilityZone" ] }
+      },
+     "PublicIP" : {
+      "Description" : "Public IP address of the newly created EC2 instance",
+      "Value" : { "Fn::GetAtt" : [ "WebServer", "PublicIp" ] }
+    }      
+      
+    }
+}

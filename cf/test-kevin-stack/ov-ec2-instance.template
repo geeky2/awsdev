@@ -1,0 +1,92 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  
+  "Description" : "OneVue",
+  
+  "Parameters" : {
+      
+    "StackType" : {
+          "Description" : "OneVue",
+          "Default" : "OneVue",
+          "Type" : "String",
+          "AllowedValues" : ["OneVue"],
+          "ConstraintDescription" : "must be a valid stack type."
+    },
+    
+    "PublicKeyPair" : {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type" : "String",
+      "Default" : "krunde-AWS Test"
+    },    
+   
+    "TagInstanceName" : {
+      "Description" : "Tag for Instance Name",
+      "Type" : "String"
+    },      
+   
+   
+    "InstanceType" : {
+      "Description" : "WebServer EC2 instance type",
+      "Type" : "String",
+      "Default" : "t1.micro",
+      "AllowedValues" : [ "t1.micro","m1.small","m1.medium","m1.large","m1.xlarge","m2.xlarge","m2.2xlarge","m2.4xlarge","m3.xlarge","m3.2xlarge","c1.medium","c1.xlarge","cc1.4xlarge","cc2.8xlarge","cg1.4xlarge"],
+      "ConstraintDescription" : "must be a valid EC2 instance type."
+    }  
+  },
+  
+  "Mappings" : {
+
+    "StackEnvMapping" : {
+          "OneVue"      : { 
+          	"VPC" : "vpc-7f11041d",
+          	"AMI" : "ami-9e600cae",
+          	"SGAPP" : ["sg-0afeee68"],      
+          	"KeyPair" : "krunde-AWS Test",
+          	"SUBNET01" : "subnet-df9399bd"
+          	}
+          }
+    },
+    
+    
+  "Resources" : {     
+    "IPAddress" : {
+      "Type" : "AWS::EC2::EIP",
+      "Properties" : {
+        "Domain" : "vpc",
+        "InstanceId" : { "Ref" : "WebServer" }
+      }
+    },
+    
+    "WebServer": {  
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap" : [ "StackEnvMapping", { "Ref" : "StackType" }, "AMI"]},
+        "InstanceType"     : { "Ref" : "InstanceType" },
+        "SecurityGroupIds" : { "Fn::FindInMap" : [ "StackEnvMapping", { "Ref" : "StackType" }, "SGAPP"]},
+        "Tags" : [{ "Key" : "Name" , "Value" : { "Ref" : "TagInstanceName" } }],
+        "KeyName" : { "Ref" : "PublicKeyPair" },
+        "SubnetId" : { "Fn::FindInMap" : [ "StackEnvMapping", { "Ref" : "StackType" }, "SUBNET01"]}
+        
+      }
+    }
+       
+
+          
+  },
+  
+  "Outputs" : {
+      "InstanceId" : {
+        "Description" : "InstanceId of the newly created EC2 instance",
+        "Value" : { "Ref" : "WebServer" }
+      },
+      "AZ" : {
+        "Description" : "Availability Zone of the newly created EC2 instance",
+        "Value" : { "Fn::GetAtt" : [ "WebServer", "AvailabilityZone" ] }
+      },
+     "PublicIP" : {
+      "Description" : "Public IP address of the newly created EC2 instance",
+      "Value" : { "Fn::GetAtt" : [ "WebServer", "PublicIp" ] }
+    }      
+      
+    }
+}

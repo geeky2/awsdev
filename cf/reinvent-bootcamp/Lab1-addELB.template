@@ -1,0 +1,61 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Builds a Multi-AZ ELB for public use. **WARNING** This template creates Amazon EC2 instance(s). You will be billed for the AWS resources used if you create a stack from this template.",
+
+  "Resources" : {
+
+    "ProdWebElasticLoadBalancer" : {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties" : {
+        "SecurityGroups" : [{ "Ref" : "LoadBalancerSecurityGroup" }],
+        "Subnets" : [{ "Ref" : "PublicSubnetA" },{ "Ref" : "PublicSubnetB" },{ "Ref" : "PublicSubnetC" }],
+        "Listeners" : [{
+          "LoadBalancerPort" : "80",
+          "InstancePort" : "80",
+          "Protocol" : "HTTP"
+        }],
+        "HealthCheck" : {
+          "Target" : "HTTP:80/wp-admin/install.php",
+          "HealthyThreshold" : "3",
+          "UnhealthyThreshold" : "5",
+          "Interval" : "30",
+          "Timeout" : "25"
+        }
+      }
+    },
+
+    "LoadBalancerSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable HTTP access on port 80",
+        "VpcId" : { "Ref" : "VPC" },
+        "SecurityGroupIngress" : [{
+          "IpProtocol" : "tcp",
+          "FromPort" : "80",
+          "ToPort" : "80",
+          "CidrIp" : "0.0.0.0/0"
+        }],
+        "SecurityGroupEgress" : [{
+          "IpProtocol" : "tcp",
+          "FromPort" : "80",
+          "ToPort" : "80",
+          "CidrIp" : "0.0.0.0/0"
+        }]
+      }
+    }
+  },
+
+  "Outputs" : {
+
+    "ProdWebElasticLoadBalancer" : {
+      "Value" : {"Ref" : "ProdWebElasticLoadBalancer" },
+      "Description" : "ELB to Assign to Prod Web Instances"
+    },
+
+    "ExternalElbUrl" : {
+      "Description" : "URL of the website",
+      "Value" :  { "Fn::Join" : [ "", [ "http://", { "Fn::GetAtt" : [ "ProdWebElasticLoadBalancer", "DNSName" ]}]]}
+    }
+  }
+}
