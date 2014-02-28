@@ -1,6 +1,7 @@
 #!/bin/bash
 ROOT_DIR=.
 TEMPLATE_DIR=$ROOT/home/mark/gitrepos/awsdev/cf/test-kevin-stack
+INSTANCE_NAME="test-bastion"
 KEY_NAME=$1
 BASTION_KEY_NAME=$2
 VPC_ID=$3
@@ -14,4 +15,4 @@ then
 	echo $USAGE
 	exit 1
 fi
-aws cloudformation create-stack --region $REGION --stack-name $BASTION_NAME --template-body file:///$TEMPLATE_DIR/$TEMPLATE_NAME --parameters ParameterKey=KeyName,ParameterValue=$KEY_NAME ParameterKey=BastionKeyName,ParameterValue=$BASTION_KEY_NAME ParameterKey=VpcId,ParameterValue=$VPC_ID ParameterKey=SubnetId,ParameterValue=$SUBNET_ID
+aws cloudformation create-stack --region $REGION --stack-name $INSTANCE_NAME --template-body file:///$TEMPLATE_DIR/$TEMPLATE_NAME --parameters ParameterKey=KeyName,ParameterValue="${KEY_NAME}" ParameterKey=BastionKeyName,ParameterValue=${BASTION_KEY_NAME} ParameterKey=VpcId,ParameterValue=${VPC_ID} ParameterKey=SubnetId,ParameterValue=${SUBNET_ID}
